@@ -1,0 +1,61 @@
+"""Sample Python Code"""
+
+#Import Libraries
+import pandas as pd
+from sklearn import linear_model
+import matplotlib.pyplot as plt
+
+#Define Season
+def get_season(row):
+    if row['datetime'].month >= 3 and row['datetime'].month <= 5:
+        return 'Spring'
+    elif row['datetime'].month >= 6 and row['datetime'].month <= 8:
+        return 'Summer'
+    elif row['datetime'].month >= 9 and row['datetime'].month <= 11:
+        return 'Fall'
+    else:
+        return 'Winter'
+
+#Import Dataset
+dataset1 = pd.read_excel('Filename.xlsx', sheet_name = "sheet name" )
+data1 = dataset1.interpolate(method= 'linear', linit_direction = 'forward')
+
+#Adding Holidays in the dataset
+from pandas.tseries.holiday import USFederalHolidayCalendar
+cal = USFederalHolidayCalendar()
+holidays = cal.holidays(start= data1['datetime'].min(), end=data1['datetime'].max()).to_pydatetime()
+data1['Holiday'] = data1['datetime'].dt.date.astype('datetime64').isin(holidays)
+data1["Holiday"] = (data1['Holiday'] == True).astype(int)
+
+#adding season column in the dataset
+data1['Season'] = data1.apply(get_season, axis=1)
+
+#setting holiday as a category variable
+data1.Holiday = data1.Holiday.astype('category')
+
+#train-test datasets
+
+train_set = 0.60
+idx = int((len(data1) * train_set))
+train = data1.iloc[:idx, :]
+test = (data1.iloc[idx:, :]).dropna()
+
+X_train = train.iloc[:, 1:19]
+X_test = test.iloc[:, 1:19]
+y_train = train.iloc[:, 0]
+y_test = test.iloc[:, 0]
+
+#train linear Model
+model = linear_model.LinearRegression()
+
+model.fit(X_train,y_train)
+
+y_pred = model.predict(X_test)
+
+#Calculate Error
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+rms1 = sqrt(mean_squared_error(y_test, y_pred))
+
+#Plot
+plt.plot(y_test, y_pred , label="graph" , color='r')
