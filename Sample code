@@ -1,4 +1,4 @@
-"""Sample Python Code"""
+"""Sample Python Code for linear regression"""
 
 #Import Libraries
 import pandas as pd
